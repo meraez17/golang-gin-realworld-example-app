@@ -356,9 +356,9 @@ var unauthRequestTests = []struct {
 		"/user/",
 		"PUT",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
-		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"WHERE conditions required"}}`,
-		"cheat validator and test database connecting error for user update",
+		http.StatusUnauthorized,
+		`^$`,
+		"invalid zero user claim should be rejected before user update",
 	},
 	{
 		func(req *http.Request) {
