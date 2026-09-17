@@ -14,7 +14,11 @@ func TestJWTSecretRejectsMissingAndShortValues(t *testing.T) {
 	original := os.Getenv("JWT_SECRET")
 	t.Cleanup(func() { _ = os.Setenv("JWT_SECRET", original) })
 	_ = os.Unsetenv("JWT_SECRET")
-	if _, err := JWTSecret(); err == nil { t.Fatal("missing secret must fail") }
+	if _, err := JWTSecret(); err == nil {
+		t.Fatal("missing secret must fail")
+	}
 	_ = os.Setenv("JWT_SECRET", "short")
-	if _, err := JWTSecret(); err == nil { t.Fatal("short secret must fail") }
+	if _, err := JWTSecret(); err == nil {
+		t.Fatal("short secret must fail")
+	}
 }

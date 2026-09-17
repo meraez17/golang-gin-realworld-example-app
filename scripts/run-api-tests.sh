@@ -7,10 +7,6 @@ mkdir -p ./tmp
 # Clean up database
 rm -f ./data/gorm.db
 
-# Download Postman collection
-echo "Downloading Postman collection..."
-curl -L -s https://raw.githubusercontent.com/gothinkster/realworld/main/api/Conduit.postman_collection.json -o ./tmp/Conduit.postman_collection.json
-
 # Build the application
 echo "Building application..."
 go build -o app hello.go
@@ -43,14 +39,14 @@ echo "Running API tests..."
 # Check if newman is available
 if ! command -v newman &> /dev/null; then
     echo "newman not found, trying npx..."
-    npx newman run ./tmp/Conduit.postman_collection.json \
+    npx newman run ./api/Conduit.postman_collection.json \
       --global-var "APIURL=http://localhost:8080/api" \
       --global-var "EMAIL=test@example.com" \
       --global-var "PASSWORD=password" \
       --global-var "USERNAME=testuser" \
       --delay-request 50
 else
-    newman run ./tmp/Conduit.postman_collection.json \
+    newman run ./api/Conduit.postman_collection.json \
       --global-var "APIURL=http://localhost:8080/api" \
       --global-var "EMAIL=test@example.com" \
       --global-var "PASSWORD=password" \

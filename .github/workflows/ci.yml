@@ -6,13 +6,13 @@ on:
   pull_request:
     branches: [ master, main, assessment-base ]
 
+env:
+  JWT_SECRET: ci-only-secret-with-at-least-32-characters
+
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    env:
-      JWT_SECRET: ci-only-secret-with-at-least-32-characters
-    
     permissions:
       contents: read
       pull-requests: write

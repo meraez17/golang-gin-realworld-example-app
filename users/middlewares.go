@@ -70,7 +70,9 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			id, ok := claims["id"].(float64)
 			if !ok || id <= 0 || id != float64(uint(id)) {
-				if auto401 { c.AbortWithStatus(http.StatusUnauthorized) }
+				if auto401 {
+					c.AbortWithStatus(http.StatusUnauthorized)
+				}
 				return
 			}
 			UpdateContextUserModel(c, uint(id))
