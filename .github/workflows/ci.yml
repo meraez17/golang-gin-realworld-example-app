@@ -2,15 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, assessment-base, fix/auth-hardening ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, assessment-base ]
+
+env:
+  JWT_SECRET: ci-only-secret-with-at-least-32-characters
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    
     permissions:
       contents: read
       pull-requests: write

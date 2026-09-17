@@ -9,18 +9,13 @@ import (
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 )
 
-// Extract token from Authorization header or query parameter
+// Extract token from the Authorization header. Query-string tokens leak through
+// browser history, proxies and access logs, so they are deliberately rejected.
 func extractToken(c *gin.Context) string {
 	// Check Authorization header first
 	bearerToken := c.GetHeader("Authorization")
 	if len(bearerToken) > 6 && strings.ToUpper(bearerToken[0:6]) == "TOKEN " {
 		return bearerToken[6:]
-	}
-
-	// Check query parameter
-	token := c.Query("access_token")
-	if token != "" {
-		return token
 	}
 
 	return ""
@@ -52,12 +47,17 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 			return
 		}
 
+		secret, err := common.JWTSecret()
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// Validate the signing method
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(common.JWTSecret), nil
+			return secret, nil
 		})
 
 		if err != nil {
@@ -68,8 +68,14 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			my_user_id := uint(claims["id"].(float64))
-			UpdateContextUserModel(c, my_user_id)
+			id, ok := claims["id"].(float64)
+			if !ok || id <= 0 || id != float64(uint(id)) {
+				if auto401 {
+					c.AbortWithStatus(http.StatusUnauthorized)
+				}
+				return
+			}
+			UpdateContextUserModel(c, uint(id))
 		}
 	}
 }

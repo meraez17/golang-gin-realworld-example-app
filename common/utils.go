@@ -3,8 +3,11 @@ package common
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,18 +40,29 @@ func RandInt() int {
 	return int(randNum.Int64())
 }
 
-// Keep this two config private, it should not expose to open source
-const JWTSecret = "A String Very Very Very Strong!!@##$!@#$"      // #nosec G101
 const RandomPassword = "A String Very Very Very Random!!@##$!@#4" // #nosec G101
+
+func JWTSecret() ([]byte, error) {
+	secret := strings.TrimSpace(os.Getenv("JWT_SECRET"))
+	if len(secret) < 32 {
+		return nil, errors.New("JWT_SECRET must contain at least 32 characters")
+	}
+	return []byte(secret), nil
+}
 
 // A Util function to generate jwt_token which can be used in the request header
 func GenToken(id uint) string {
+	secret, err := JWTSecret()
+	if err != nil {
+		fmt.Printf("failed to load JWT secret: %v\n", err)
+		return ""
+	}
 	jwt_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  id,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 	// Sign and get the complete encoded token as a string
-	token, err := jwt_token.SignedString([]byte(JWTSecret))
+	token, err := jwt_token.SignedString(secret)
 	if err != nil {
 		fmt.Printf("failed to sign JWT token for id %d: %v\n", id, err)
 		return ""

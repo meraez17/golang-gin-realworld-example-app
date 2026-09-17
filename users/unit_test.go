@@ -356,9 +356,9 @@ var unauthRequestTests = []struct {
 		"/user/",
 		"PUT",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
-		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"WHERE conditions required"}}`,
-		"cheat validator and test database connecting error for user update",
+		http.StatusUnauthorized,
+		`^$`,
+		"invalid zero user claim should be rejected before user update",
 	},
 	{
 		func(req *http.Request) {
@@ -487,7 +487,7 @@ func TestWithoutAuth(t *testing.T) {
 	}
 }
 
-func TestExtractTokenFromQueryParameter(t *testing.T) {
+func TestRejectsTokenFromQueryParameter(t *testing.T) {
 	asserts := assert.New(t)
 
 	r := gin.New()
@@ -504,8 +504,8 @@ func TestExtractTokenFromQueryParameter(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test?access_token="+token, nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	asserts.Equal(http.StatusOK, w.Code, "Request with query token should succeed")
-	asserts.Contains(w.Body.String(), `"user_id":1`, "User ID should be 1")
+	asserts.Equal(http.StatusOK, w.Code)
+	asserts.Contains(w.Body.String(), `"user_id":0`, "query token must be ignored")
 }
 
 func TestAuthMiddlewareInvalidToken(t *testing.T) {
@@ -546,6 +546,7 @@ func TestAuthMiddlewareNoToken(t *testing.T) {
 // This is a hack way to add test database for each case, as whole test will just share one database.
 // You can read TestWithoutAuth's comment to know how to not share database each case.
 func TestMain(m *testing.M) {
+	_ = os.Setenv("JWT_SECRET", "unit-test-secret-with-at-least-32-characters")
 	test_db = common.TestDBInit()
 	AutoMigrate()
 	exitVal := m.Run()
